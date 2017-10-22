@@ -38,7 +38,7 @@ def get_train_img():
         for ip in iplist:
             # read the file. guaranteed to exist
             img = cv2.imread(ip)
-            resized_image = cv2.resize(img, (200, 150)) 
+            resized_image = cv2.resize(img, (299,299)) 
             X.append(resized_image)
             y.append(clid)
         clid = clid+1
