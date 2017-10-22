@@ -58,7 +58,7 @@ def inception_stem(input):
 
     x = merge([x1, x2], mode='concat', concat_axis=channel_axis)
 
-    x1 = conv_block(x, 192, 3, 3, subsample=(2, 2), border_mode='valid')
+    x1 = conv_block(x, 19, 3, 3, subsample=(2, 2), border_mode='valid')
     x2 = MaxPooling2D((3, 3), strides=(2, 2), border_mode='valid')(x)
 
     x = merge([x1, x2], mode='concat', concat_axis=channel_axis)
