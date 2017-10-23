@@ -1,6 +1,7 @@
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISOBLE_DEVICES"] = ""
+#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
@@ -25,19 +26,36 @@ def main():
     print "Fitting model with this structure:"
     model.summary()
     
+    print "Compiling model..."
     model.compile(loss='categorical_crossentropy',
                 optimizer='adam',
                 metrics=['accuracy'])
 
-    model.fit(data.trn[0], data.trn[1], 
-            batch_size=32, epochs=200, verbose=1)
-    
+    orig =  data._lb.inverse_transform(data.trn[1])
+
+    num_batches = 40
+    bsize = 10
+    for e  in range(80):
+	    print "epoch #%d"%e
+	    e_pr = []
+	    for i in range(num_batches):
+		    b_x = data.trn[0][i*bsize:(i+1)*bsize]
+		    b_y =  data.trn[1][i*bsize:(i+1)*bsize]
+		    print "batch #%d"%i
+		    model.train_on_batch(b_x, b_y)
+			    
+		    pr = model.predict(b_x)
+		    for p in pr:
+			    e_pr.append(p)
+	    e_pr = np.array(e_pr)
+	    set_l = num_batches*bsize
+   	    print "Accuracy: %f "%(sum([cls_of_pred(e_pr[i]) == orig[i] for i in range(set_l)])/(set_l*1.0))
  #   plt.plot([v['val_acc'] for v in model.history])
  #   plt.show()
 
     print "\nEvaluating model..."
-    score = model.evaluate(data.tst[0], data.tst[1], verbose=1)
-    count_acc_by_hand(50,model,data)
+    score = model.evaluate(data.tst[0][:10], data.tst[1][:10], verbose=1)
+    count_acc_by_hand(100,model,data)
     print "loss:%f , score:%f "%(score[0],score[1])
 
 def count_acc_by_hand(cnt,model,data):
