@@ -59,11 +59,11 @@ def main():
     print "loss:%f , score:%f "%(score[0],score[1])
 
 def count_acc_by_hand(cnt,model,data):
-    orig =  data._lb.inverse_transform(data.trn[1])[:cnt]
+    orig =  data._lb.inverse_transform(data.tst[1])[:cnt]
     print "\noriginal labels ",orig
-    pr =  np.array([cls_of_pred( model.predict(np.array([data.trn[0][i]]))[0]) for i in range(cnt)])
+    pr =  np.array([cls_of_pred( model.predict(np.array([data.tst[0][i]]))[0]) for i in range(cnt)])
     print "predicted labels", pr
-    print "Example of prediction",model.predict(np.array([data.trn[0][0]]))
+    print "Example of prediction",model.predict(np.array([data.tst[0][0]]))
     print "accuracy by hand:",sum([pr[i]==orig[i]for i in range(cnt)])/(cnt*1.0)
 
 
