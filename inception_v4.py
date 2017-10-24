@@ -1,14 +1,11 @@
 import os
 
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
 from keras.layers import Input, merge, Dropout, Dense, Flatten, Activation
 from keras.layers.convolutional import MaxPooling2D, Convolution2D, AveragePooling2D
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 
 from keras import backend as K
-from keras.utils.data_utils import get_file
 
 """
 Implementation of Inception Network v4 [Inception Network v4 Paper](http://arxiv.org/pdf/1602.07261v1.pdf) in Keras.
@@ -93,17 +90,17 @@ def inception_B(input):
     else:
         channel_axis = -1
 
-    b1 = conv_block(input, 38, 1, 1)
+    b1 = conv_block(input, 384, 1, 1)
 
-    b2 = conv_block(input, 19, 1, 1)
-    b2 = conv_block(b2, 22, 1, 7)
-    b2 = conv_block(b2, 25, 7, 1)
+    b2 = conv_block(input, 192, 1, 1)
+    b2 = conv_block(b2, 224, 1, 7)
+    b2 = conv_block(b2, 256, 7, 1)
 
-    b3 = conv_block(input, 19, 1, 1)
-    b3 = conv_block(b3, 19, 7, 1)
-    b3 = conv_block(b3, 22, 1, 7)
-    b3 = conv_block(b3, 22, 7, 1)
-    b3 = conv_block(b3, 25, 1, 7)
+    b3 = conv_block(input, 192, 1, 1)
+    b3 = conv_block(b3, 192, 7, 1)
+    b3 = conv_block(b3, 224, 1, 7)
+    b3 = conv_block(b3, 224, 7, 1)
+    b3 = conv_block(b3, 256, 1, 7)
 
     b4 = AveragePooling2D((3, 3), strides=(1, 1), border_mode='same')(input)
     b4 = conv_block(b4, 128, 1, 1)
@@ -118,22 +115,22 @@ def inception_C(input):
     else:
         channel_axis = -1
 
-    c1 = conv_block(input, 25, 1, 1)
+    c1 = conv_block(input, 256, 1, 1)
 
-    c2 = conv_block(input, 38, 1, 1)
-    c2_1 = conv_block(c2, 25, 1, 3)
-    c2_2 = conv_block(c2, 25, 3, 1)
+    c2 = conv_block(input, 384, 1, 1)
+    c2_1 = conv_block(c2, 256, 1, 3)
+    c2_2 = conv_block(c2, 256, 3, 1)
     c2 = merge([c2_1, c2_2], mode='concat', concat_axis=channel_axis)
 
-    c3 = conv_block(input, 38, 1, 1)
-    c3 = conv_block(c3, 44, 3, 1)
-    c3 = conv_block(c3, 51, 1, 3)
-    c3_1 = conv_block(c3, 25, 1, 3)
-    c3_2 = conv_block(c3, 25, 3, 1)
+    c3 = conv_block(input, 384, 1, 1)
+    c3 = conv_block(c3, 448, 3, 1)
+    c3 = conv_block(c3, 512, 1, 3)
+    c3_1 = conv_block(c3, 256, 1, 3)
+    c3_2 = conv_block(c3, 256, 3, 1)
     c3 = merge([c3_1, c3_2], mode='concat', concat_axis=channel_axis)
 
     c4 = AveragePooling2D((3, 3), strides=(1, 1), border_mode='same')(input)
-    c4 = conv_block(c4, 25, 1, 1)
+    c4 = conv_block(c4, 256, 1, 1)
 
     m = merge([c1, c2, c3, c4], mode='concat', concat_axis=channel_axis)
     return m
@@ -145,11 +142,11 @@ def reduction_A(input):
     else:
         channel_axis = -1
 
-    r1 = conv_block(input, 38, 3, 3, subsample=(2, 2), border_mode='valid')
+    r1 = conv_block(input, 384, 3, 3, subsample=(2, 2), border_mode='valid')
 
-    r2 = conv_block(input, 19, 1, 1)
-    r2 = conv_block(r2, 22, 3, 3)
-    r2 = conv_block(r2, 25, 3, 3, subsample=(2, 2), border_mode='valid')
+    r2 = conv_block(input, 192, 1, 1)
+    r2 = conv_block(r2, 224, 3, 3)
+    r2 = conv_block(r2, 256, 3, 3, subsample=(2, 2), border_mode='valid')
 
     r3 = MaxPooling2D((3, 3), strides=(2, 2), border_mode='valid')(input)
 
@@ -163,13 +160,13 @@ def reduction_B(input):
     else:
         channel_axis = -1
 
-    r1 = conv_block(input, 19, 1, 1)
-    r1 = conv_block(r1, 19, 3, 3, subsample=(2, 2), border_mode='valid')
+    r1 = conv_block(input, 192, 1, 1)
+    r1 = conv_block(r1, 192, 3, 3, subsample=(2, 2), border_mode='valid')
 
-    r2 = conv_block(input, 25, 1, 1)
-    r2 = conv_block(r2, 25, 1, 7)
-    r2 = conv_block(r2, 32, 7, 1)
-    r2 = conv_block(r2, 32, 3, 3, subsample=(2, 2), border_mode='valid')
+    r2 = conv_block(input, 256, 1, 1)
+    r2 = conv_block(r2, 256, 1, 7)
+    r2 = conv_block(r2, 324, 7, 1)
+    r2 = conv_block(r2, 324, 3, 3, subsample=(2, 2), border_mode='valid')
 
     r3 = MaxPooling2D((3, 3), strides=(2, 2), border_mode='valid')(input)
 
@@ -197,21 +194,21 @@ def create_inception_v4(init_shape,nb_classes=1001, load_weights=False):
     x = inception_stem(init)
 
     # 4 x Inception A
-    for i in range(1):
+    for i in range(4):
         x = inception_A(x)
 
     # Reduction A
     x = reduction_A(x)
 
     # 7 x Inception B
-    for i in range(1):
+    for i in range(7):
         x = inception_B(x)
 
     # Reduction B
     x = reduction_B(x)
 
     # 3 x Inception C
-    for i in range(1):
+    for i in range(3):
         x = inception_C(x)
 
     # Average Pooling

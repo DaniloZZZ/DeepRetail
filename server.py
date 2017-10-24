@@ -28,13 +28,14 @@ class S(BaseHTTPRequestHandler):
 
     def do_POST(self):
         self._set_headers()
-
         print "received POST to path "+self.path
         print "client address: %s:%s "%(self.client_address)
 
+	# get srting from request
         self.data_string = self.rfile.read(int(self.headers['Content-Length']))
-
         ctype, pdict = parse_header(self.headers['content-type'])
+
+	# compose parser
         form = cgi.FieldStorage(io.BytesIO(self.data_string),
             headers={
                 'content-type':self.headers['content-type'],
@@ -42,46 +43,51 @@ class S(BaseHTTPRequestHandler):
                 },
             environ={'REQUEST_METHOD': 'POST'})
         print "form keys:"+str(form.keys())
-        print "Data type:"+str(form.getfirst('dataType','(not definded)'))
+
+	#  get data type
+	dtype = str(form.getfirst('dataType','(not definded)'))
+        print "Data type:"+dtype
+
         if ctype=="multipart/form-data":
+	    # we decide what to do basing on data type
+	    if (dtype == "train"):
+	        self.handle_train(form)
+		response = align.hw(self.data_string)
+
+	    elif (dtype == "predict"):	
+		self.drm = DrModel()
+		self.drm.load_model("drmodel")
+		response=self.handle_predict(form)
+	
+            self.send_response(200)
+        else:
+            self.send_response(500)
+
+        self.wfile.write(response)
+        return
+
+    def handle_predict(self,form):
+        images = form.getlist('image')
+	preds = self.drm.predict(images)
+	print "predictions:",preds
+	return preds
+
+    def handle_train(self, form):
             clnm = form.getfirst('className')
             snm = form.getfirst('setName')
             vid = form.getfirst('vidId')
-            
             images = form.getlist('image')
             print "Parsed %d images"%(len(images))
+
             i=  0
             for img in images:
                 drdata.save_train_img(clnm,snm,"%s-%d"%(vid,i), img)
                 i = i+1
-            self.send_response(200)
-        else:
-            self.send_response(500)
-        self.end_headers()
-        response = align.hw(self.data_string)
-        self.wfile.write(response)
-
-        return
-
-    def parse_POST(self):
-        ctype, pdict = parse_header(self.headers['content-type'])
-        if ctype == 'multipart/form-data':
-            postvars = parse_multipart(self.rfile, pdict)
-            print "vars",postvars
-        elif ctype == 'application/x-www-form-urlencoded':
-            length = int(self.headers['content-length'])
-            postvars = parse_qs(
-                    self.rfile.read(length), 
-                    keep_blank_values=1)
-        else:
-            print "couldnt parse"
-            postvars = {}
-        return postvars
-
+	
 def run(server_class=HTTPServer, handler_class=S, port=8899):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
-    print 'Starting httpd...'
+    print 'Starting httpd on port %d...'%port
     httpd.serve_forever()
 
 if __name__ == "__main__":
