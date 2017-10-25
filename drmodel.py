@@ -1,6 +1,8 @@
 import io,os
 import numpy as np
 from keras.models import Sequential,model_from_json
+from keras.preprocessing.image import ImageDataGenerator
+
 import cv2
 import Image
 
@@ -9,28 +11,35 @@ import drnet, drdata
 class DrModel:
 	__models_dir = "models/"
 	__train_dir = "data/train/"
+	__augmented_dir = "data/augm"
 	im_size = (299,299)
 	def __init__(self):
 		d = drdata.get_train_img()
 		self.model =drnet.drnet((d.ch,d.w,d.h),5)
 		self.data = d
-	def train_aufm(self):
-		self.train_datagen = ImageGenerator(
+	def train_augm(self):
+		self.train_datagen = ImageDataGenerator(
 				rescale = 1/255.,
-				shear_range=0.2,
-				zoom_range=0.2,
+				rotation_range=90,
+				shear_range=0.3,
+				zoom_range=0.3,
 				horizontal_flip=True)
 		train_gen = self.train_datagen.flow_from_directory(
 				self.__train_dir,
-				target_size=(150, 150),
+				target_size=self.im_size,
 				batch_size=32,
-				class_mode='binary')
+				class_mode='categorical')
+
+		self.data.r_s_split(ratio = 0.33)
+		validation_generator = self.train_datagen.flow(
+				self.data.tst[0],
+				self.data.tst[1],
+				batch_size = 32)
 
 		self.model.fit_generator(
 			train_gen,
 			steps_per_epoch=2000,
 			epochs=50,
-			validation_data=validation_generator,
 			validation_steps=800)
 
 

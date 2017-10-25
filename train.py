@@ -1,7 +1,10 @@
 import os
 import sys
-#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+os.environ["DEVICE"]="cuda0"
 
 import numpy as np
 from keras.models import Sequential
@@ -23,11 +26,9 @@ def train():
 
     drm.model_name = "drmodel"
     preprocess(data)
-    data.r_s_split(ratio= 0.33)
-
-    model =drnet.drnet((data.ch,data.w,data.h),data.cls)
+   # model =drnet.drnet((data.ch,data.w,data.h),data.cls)
     #model = inception_v4.create_inception_v4((data.ch,data.w,data.h),nb_classes = 5)
-    #model = alexnet.alexNet((data.ch,data.w,data.h),5)
+    model = alexnet.alexNet((data.ch,data.w,data.h),5)
     print "Fitting model with this structure:"
     model.summary()
     
@@ -36,9 +37,19 @@ def train():
                 optimizer='adam',
                 metrics=['accuracy'])
 
-    orig =  data._lb.inverse_transform(data.trn[1])
+    drm.model = model
+    drm.train_augm()
 
-    """
+    orig =  data._lb.inverse_transform(data.trn[1])
+  # model.fit(data.trn[0],data.trn[1], epochs=102)
+    print "\nEvaluating model..."
+    score = model.evaluate(data.tst[0], data.tst[1], verbose=1)
+    count_acc_by_hand(100,model,data)
+    print "loss:%f , score:%f "%(score[0],score[1])
+    print  "saving model..."
+    drm.save_model()
+
+def train_minibatches():
     num_batches = 20
     bsize = 20
     learning_curve = []
@@ -59,15 +70,6 @@ def train():
 	    accuracy = acc/num_batches
 	    learning_curve.append(accuracy)
    	    print "Accuracy: %f, loss: %f "%(acc/num_batches,loss/num_batches)
-    """
-    model.fit(data.trn[0],data.trn[1], epochs=102)
-    print "\nEvaluating model..."
-    score = model.evaluate(data.tst[0], data.tst[1], verbose=1)
-    count_acc_by_hand(100,model,data)
-    print "loss:%f , score:%f "%(score[0],score[1])
-    print  "saving model..."
-    drm.model = model
-    drm.save_model()
 
 def count_acc_by_hand(cnt,model,data):
     orig =  data._lb.inverse_transform(data.tst[1])[:cnt]
