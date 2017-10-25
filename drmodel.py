@@ -21,9 +21,12 @@ class DrModel:
 		self.train_datagen = ImageDataGenerator(
 				rescale = 1/255.,
 				rotation_range=90,
+				width_shift_range= 0.25,
+				height_shift_range = 0.25
 				shear_range=0.3,
 				zoom_range=0.3,
 				horizontal_flip=True)
+
 		train_gen = self.train_datagen.flow_from_directory(
 				self.__train_dir,
 				target_size=self.im_size,
