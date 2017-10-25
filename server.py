@@ -1,4 +1,3 @@
-import align,drdata 
 import io
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -8,11 +7,16 @@ from cgi import parse_header, parse_multipart
 import random
 from cgi import FieldStorage
 
+from drmodel import DrModel
+import align,drdata 
 
 from urlparse import parse_qs
 from BaseHTTPServer import BaseHTTPRequestHandler
 
 delim = "newdrtimg"
+
+drm = DrModel()
+drm.load_model("drmodel")
 
 class S(BaseHTTPRequestHandler):
     def _set_headers(self):
@@ -55,8 +59,6 @@ class S(BaseHTTPRequestHandler):
 		response = align.hw(self.data_string)
 
 	    elif (dtype == "predict"):	
-		self.drm = DrModel()
-		self.drm.load_model("drmodel")
 		response=self.handle_predict(form)
 	
             self.send_response(200)
@@ -68,7 +70,7 @@ class S(BaseHTTPRequestHandler):
 
     def handle_predict(self,form):
         images = form.getlist('image')
-	preds = self.drm.predict(images)
+	preds = drm.predict(images)
 	print "predictions:",preds
 	return preds
 

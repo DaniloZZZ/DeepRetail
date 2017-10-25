@@ -74,6 +74,10 @@ class DRData:
         self.tst = (X_s, y_s)
         return X_tr,y_tr,X_s,y_s
 
+    def get_label_names(self,lab_arr ):
+	return [self.clsNames[l] for l in lab_arr]
+
+
 def get_unique_labels_cnt(y):
     return len(set(y))
     

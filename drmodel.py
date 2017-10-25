@@ -14,7 +14,7 @@ class DrModel:
 		self.model =drnet.drnet((d.ch,d.w,d.h),5)
 		self.data = d
 
-	def predict(img_arr):
+	def predict(self,img_arr):
 		# takes binary data just from POST request		
 		# load from binary to Image obj
 		images = [Image.open(io.BytesIO(bts)) for bts in img_arr]
@@ -22,10 +22,14 @@ class DrModel:
 		imgs = [cv2.resize(np.array(img),self.im_size) for img in images]
 
 		print "Predicting for %d images"%len(imgs)
-		preds = self.model.predict(imgs)
+
+		imgs = np.array(imgs)
+		s = imgs.shape
+		imgs = np.array(imgs).reshape(s[0],s[3],s[1],s[2])
+		preds = self.model.predict(np.array(imgs))
 		# get labels from prefictions
 		labels = self.data._lb.inverse_transform(preds)
-		return labels
+		return self.data.get_label_names(labels)
 
 	def load_model(self,name):
 		d = self.__models_dir+name

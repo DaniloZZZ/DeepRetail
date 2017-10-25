@@ -60,7 +60,7 @@ def train():
 	    learning_curve.append(accuracy)
    	    print "Accuracy: %f, loss: %f "%(acc/num_batches,loss/num_batches)
     """
-    model.fit(data.trn[0],data.trn[1], epochs=52)
+    model.fit(data.trn[0],data.trn[1], epochs=152)
     print "\nEvaluating model..."
     score = model.evaluate(data.tst[0], data.tst[1], verbose=1)
     count_acc_by_hand(100,model,data)

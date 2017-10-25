@@ -12,7 +12,3 @@ def hw(data):
     print type(img)
     return img+"newdrtimg"+img2
 
-def start():
-    dd = drdata.get_train_img()
-
-start()
