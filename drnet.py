@@ -9,10 +9,11 @@ def drnet(input_shape,nb_classes):
 	x.add(Conv2D(256, (7,7), strides = 3,activation ='relu',input_shape=input_shape))
 	x.add(MaxPooling2D(pool_size=(5,5)))
 	x.add(Dropout(0.25))
-	x.add(Conv2D(128,(3,3),activation='relu'))
+	x.add(Conv2D(256,(3,3),activation='relu'))
 	x.add(MaxPooling2D(pool_size=(2,2)))
 	x.add(Dropout(0.25))
-	x.add(Conv2D(64,(3,3),activation='relu'))
+	x.add(Conv2D(128,(3,3),activation='relu'))
+	x.add(Dropout(0.25))
 	x.add(Conv2D(64,(3,3),activation='relu'))
 	x.add(MaxPooling2D(pool_size=(2,2)))
 

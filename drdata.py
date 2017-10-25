@@ -69,7 +69,7 @@ class DRData:
     def r_s_split(self,ratio=  0.2):
         X_tr,X_s,y_tr,y_s = train_test_split(self.X,self.y,
                 test_size=ratio,
-                random_state=41)
+                random_state=40)
         self.trn = (X_tr, y_tr)
         self.tst = (X_s, y_s)
         return X_tr,y_tr,X_s,y_s

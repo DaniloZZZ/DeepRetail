@@ -8,11 +8,31 @@ import drnet, drdata
 
 class DrModel:
 	__models_dir = "models/"
+	__train_dir = "data/train/"
 	im_size = (299,299)
 	def __init__(self):
 		d = drdata.get_train_img()
 		self.model =drnet.drnet((d.ch,d.w,d.h),5)
 		self.data = d
+	def train_aufm(self):
+		self.train_datagen = ImageGenerator(
+				rescale = 1/255.,
+				shear_range=0.2,
+				zoom_range=0.2,
+				horizontal_flip=True)
+		train_gen = self.train_datagen.flow_from_directory(
+				self.__train_dir,
+				target_size=(150, 150),
+				batch_size=32,
+				class_mode='binary')
+
+		self.model.fit_generator(
+			train_gen,
+			steps_per_epoch=2000,
+			epochs=50,
+			validation_data=validation_generator,
+			validation_steps=800)
+
 
 	def predict(self,img_arr):
 		# takes binary data just from POST request		

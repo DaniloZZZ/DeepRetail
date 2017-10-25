@@ -23,9 +23,9 @@ def train():
 
     drm.model_name = "drmodel"
     preprocess(data)
-    data.r_s_split(ratio= 0.2)
+    data.r_s_split(ratio= 0.33)
 
-    model =drnet.drnet((data.ch,data.w,data.h),5)
+    model =drnet.drnet((data.ch,data.w,data.h),data.cls)
     #model = inception_v4.create_inception_v4((data.ch,data.w,data.h),nb_classes = 5)
     #model = alexnet.alexNet((data.ch,data.w,data.h),5)
     print "Fitting model with this structure:"
@@ -60,7 +60,7 @@ def train():
 	    learning_curve.append(accuracy)
    	    print "Accuracy: %f, loss: %f "%(acc/num_batches,loss/num_batches)
     """
-    model.fit(data.trn[0],data.trn[1], epochs=152)
+    model.fit(data.trn[0],data.trn[1], epochs=102)
     print "\nEvaluating model..."
     score = model.evaluate(data.tst[0], data.tst[1], verbose=1)
     count_acc_by_hand(100,model,data)
