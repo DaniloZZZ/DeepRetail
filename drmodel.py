@@ -4,7 +4,7 @@ from keras.models import Sequential,model_from_json
 from keras.preprocessing.image import ImageDataGenerator
 
 import cv2
-import Image
+from pillow import Image
 
 import drnet, drdata
 
