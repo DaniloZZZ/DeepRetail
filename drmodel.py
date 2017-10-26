@@ -42,8 +42,8 @@ class DrModel:
 
 		self.model.fit_generator(
 			train_gen,
-			steps_per_epoch=200,
-			epochs=3,
+			steps_per_epoch=100,
+			epochs=10,
 			validation_steps=800)
 
 

@@ -26,9 +26,9 @@ def train():
 
     drm.model_name = "drmodel"
     preprocess(data)
-   # model =drnet.drnet((data.ch,data.w,data.h),data.cls)
+    model =drnet.drnet((data.ch,data.w,data.h),data.cls)
     #model = inception_v4.create_inception_v4((data.ch,data.w,data.h),nb_classes = 5)
-    model = alexnet.alexNet((data.ch,data.w,data.h),5)
+   # model = alexnet.alexNet((data.ch,data.w,data.h),5)
     print "Fitting model with this structure:"
     model.summary()
     
