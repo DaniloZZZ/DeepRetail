@@ -43,8 +43,8 @@ def train():
     orig =  data._lb.inverse_transform(data.trn[1])
   # model.fit(data.trn[0],data.trn[1], epochs=102)
     print "\nEvaluating model..."
-    score = model.evaluate(data.tst[0], data.tst[1], verbose=1)
-    count_acc_by_hand(100,model,data)
+    score = drm.model.evaluate(data.tst[0], data.tst[1], verbose=1)
+    count_acc_by_hand(100,drm.model,data)
     print "loss:%f , score:%f "%(score[0],score[1])
     print  "saving model..."
     drm.save_model()
