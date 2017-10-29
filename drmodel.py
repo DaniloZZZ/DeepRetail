@@ -24,11 +24,15 @@ class DrModel:
 		self.train_datagen = ImageDataGenerator(
 				rescale = 1/255.,
 				rotation_range=90,
+				width_shift_range= 0.15,
+				height_shift_range = 0.15,
 				shear_range=0.3,
 				zoom_range=0.3,
 				horizontal_flip=True)
+
 		train_gen = self.train_datagen.flow_from_directory(
 				self.__train_dir,
+			#	save_to_dir = self.__augmented_dir,
 				target_size=self.im_size,
 				batch_size=32,
 				class_mode='categorical')
@@ -41,8 +45,8 @@ class DrModel:
 
 		self.model.fit_generator(
 			train_gen,
-			steps_per_epoch=2000,
-			epochs=50,
+			steps_per_epoch=100,
+			epochs=10,
 			validation_steps=800)
 
 	def predict(self,img_arr):
