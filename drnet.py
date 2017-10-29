@@ -22,6 +22,6 @@ def drnet(input_shape,nb_classes):
 	x.add(Dropout(0.5))
 	x.add(Dense(64,activation='relu'))
 	x.add(Dropout(0.5))
-	x.add(Dense(nb_classes,activation='softmax'))
+	x.add(Dense(nb_classes,activation='softmax',name="preds"))
 	return x
 

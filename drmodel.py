@@ -2,9 +2,12 @@ import io,os
 import numpy as np
 from keras.models import Sequential,model_from_json
 from keras.preprocessing.image import ImageDataGenerator
+import vis.visualization as visualization
+import vis.utils as vutils
 
 import cv2
 from PIL import Image
+import matplotlib.pyplot as plt
 
 import drnet, drdata
 
@@ -42,7 +45,6 @@ class DrModel:
 			epochs=50,
 			validation_steps=800)
 
-
 	def predict(self,img_arr):
 		# takes binary data just from POST request		
 		# load from binary to Image obj
@@ -51,15 +53,50 @@ class DrModel:
 		imgs = [cv2.resize(np.array(img),self.im_size) for img in images]
 
 		print "Predicting for %d images"%len(imgs)
-
 		imgs = np.array(imgs)
 		s = imgs.shape
 		imgs = np.array(imgs).reshape(s[0],s[3],s[1],s[2])
-		preds = self.model.predict(np.array(imgs))
+		preds = self.model.preict(np.array(imgs))
 		# get labels from prefictions
 		labels = self.data._lb.inverse_transform(preds)
 		return self.data.get_label_names(labels)
 
+# -- Evaluating and visualizing model
+	def save_activation_map(self):
+		d = self.__models_dir+"activations/"
+		check_create_dir(d)	
+		l_idx =vils.find_layer_idx(self.model,"preds")
+		print "preds idx",l_idx
+		f_ids = [1,2,3]
+		imgs = visualization.visualize_activation(
+			self.model,
+			l_idx, f_ids,
+			verbose=True)
+		n =0
+		for im in imgs:	
+			fi = f_ids[n]
+			print fi 
+			plt.imshow(im)
+			plt.show()
+			cv2.imwrite(d+"act_L%d_F%d.png"%(l_idx,fi),im)
+			n=n+1
+
+	def save_saliency_map(self):
+		d = self.__models_dir+"saliency/"
+		l_idx =5
+		f_idx = [1]
+		print "v"
+		imgs = visualization.visualize_saliency(
+			self.model,
+			l_idx, f_idx,
+			self.data.X[0])
+		check_create_dir(d)	
+		cv2.imwrite(d+"act_L%d_F%d.png"%(l_idx,f_idx[0]),imgs[0])
+
+
+# -- Loading and saving model --
+
+	# Loads model from __models_dir directory to self.model
 	def load_model(self,name):
 		d = self.__models_dir+name
 		check_create_dir(d)
@@ -71,6 +108,7 @@ class DrModel:
 		self.model_name= name
 		print "Loaded Model from %s"%d
 		
+	# Saves model from self.model to __models_dir directory 
 	def save_model(self):
 		d = self.__models_dir+self.model_name
 		check_create_dir(d)
