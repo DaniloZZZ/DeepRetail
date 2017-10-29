@@ -3,7 +3,7 @@ import numpy as np
 from keras.models import Sequential,model_from_json
 from keras.preprocessing.image import ImageDataGenerator
 import vis.visualization as visualization
-import vis.utils as vutils
+from vis.utils import utils as vutils
 
 import cv2
 from PIL import Image
@@ -16,18 +16,21 @@ class DrModel:
 	__train_dir = "data/train/"
 	__augmented_dir = "data/augm"
 	im_size = (299,299)
-	def __init__(self):
+	def __init__(self, name = "drmodel"):
 		d = drdata.get_train_img()
 		self.model =drnet.drnet((d.ch,d.w,d.h),5)
 		self.data = d
+		self.model_name = name
+		self.__model_dir = self.__models_dir+name +"/"
+
 	def train_augm(self):
 		self.train_datagen = ImageDataGenerator(
 				rescale = 1/255.,
-				rotation_range=90,
+				rotation_range=40,
 				width_shift_range= 0.15,
 				height_shift_range = 0.15,
-				shear_range=0.3,
-				zoom_range=0.3,
+				shear_range=0.2,
+				zoom_range=0.2,
 				horizontal_flip=True)
 
 		train_gen = self.train_datagen.flow_from_directory(
@@ -45,8 +48,10 @@ class DrModel:
 
 		self.model.fit_generator(
 			train_gen,
+			workers=4,
 			steps_per_epoch=100,
 			epochs=10,
+			validation_data=validation_generator,
 			validation_steps=800)
 
 	def predict(self,img_arr):
@@ -67,9 +72,9 @@ class DrModel:
 
 # -- Evaluating and visualizing model
 	def save_activation_map(self):
-		d = self.__models_dir+"activations/"
+		d = self.__model_dir+"activations/"
 		check_create_dir(d)	
-		l_idx =vils.find_layer_idx(self.model,"preds")
+		l_idx =vutils.find_layer_idx(self.model,"preds")
 		print "preds idx",l_idx
 		f_ids = [1,2,3]
 		imgs = visualization.visualize_activation(
@@ -86,7 +91,7 @@ class DrModel:
 			n=n+1
 
 	def save_saliency_map(self):
-		d = self.__models_dir+"saliency/"
+		d = self.__model_dir+"saliency/"
 		l_idx =5
 		f_idx = [1]
 		print "v"
@@ -114,7 +119,7 @@ class DrModel:
 		
 	# Saves model from self.model to __models_dir directory 
 	def save_model(self):
-		d = self.__models_dir+self.model_name
+		d = self.__model_dir
 		check_create_dir(d)
 		model_jsn = self.model.to_json()
 		with open(d+"/model.json",'w+') as jsn:
