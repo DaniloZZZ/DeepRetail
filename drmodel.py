@@ -18,33 +18,32 @@ class DrModel:
 	im_size = (299,299)
 	def __init__(self, name = "drmodel"):
 		d = drdata.get_train_img()
-		self.model =drnet.drnet((d.ch,d.w,d.h),5)
 		self.data = d
 		self.model_name = name
 		self.__model_dir = self.__models_dir+name +"/"
 
+# -- Training --
 	def train_augm(self):
 		self.train_datagen = ImageDataGenerator(
 				rescale = 1/255.,
 				rotation_range=40,
 				width_shift_range= 0.15,
 				height_shift_range = 0.15,
-				shear_range=0.2,
-				zoom_range=0.2,
+				shear_range=0.2, zoom_range=0.2,
 				horizontal_flip=True)
 
 		train_gen = self.train_datagen.flow_from_directory(
 				self.__train_dir,
 			#	save_to_dir = self.__augmented_dir,
 				target_size=self.im_size,
-				batch_size=32,
+				batch_size=16,
 				class_mode='categorical')
 
 		self.data.r_s_split(ratio = 0.33)
 		validation_generator = self.train_datagen.flow(
 				self.data.tst[0],
 				self.data.tst[1],
-				batch_size = 32)
+				batch_size = 16)
 
 		self.model.fit_generator(
 			train_gen,
@@ -52,7 +51,15 @@ class DrModel:
 			steps_per_epoch=100,
 			epochs=10,
 			validation_data=validation_generator,
-			validation_steps=800)
+			validation_steps=30)
+
+	def train_classic(self,epochs = 20):
+		print self.data.trn[1][1]
+		plt.imshow(self.data.trn[0][1])
+		plt.show()
+		self.model.fit(self.data.trn[0][:100],
+			self.data.trn[1][:100],
+			epochs=epochs)
 
 	def predict(self,img_arr):
 		# takes binary data just from POST request		
@@ -64,43 +71,59 @@ class DrModel:
 		print "Predicting for %d images"%len(imgs)
 		imgs = np.array(imgs)
 		s = imgs.shape
-		imgs = np.array(imgs).reshape(s[0],s[3],s[1],s[2])
+		imgs = n.array(imgs).reshape(s[0],s[1],s[2],s[3])
 		preds = self.model.preict(np.array(imgs))
 		# get labels from prefictions
 		labels = self.data._lb.inverse_transform(preds)
 		return self.data.get_label_names(labels)
 
 # -- Evaluating and visualizing model
-	def save_activation_map(self):
+	def save_activation_map(self,name):
 		d = self.__model_dir+"activations/"
 		check_create_dir(d)	
-		l_idx =vutils.find_layer_idx(self.model,"preds")
-		print "preds idx",l_idx
-		f_ids = [1,2,3]
-		imgs = visualization.visualize_activation(
-			self.model,
-			l_idx, f_ids,
-			verbose=True)
-		n =0
-		for im in imgs:	
-			fi = f_ids[n]
-			print fi 
-			plt.imshow(im)
-			plt.show()
-			cv2.imwrite(d+"act_L%d_F%d.png"%(l_idx,fi),im)
-			n=n+1
+		# check data format and find layer by name
+		if (type(name)==type("sds")):
+			l_idx =vutils.find_layer_idx(self.model,
+							name)
+		else:
+			l_idx = name
 
-	def save_saliency_map(self):
+		print "layer idx",l_idx
+		layer = self.model.layers[l_idx]
+		out_shape = layer.output_shape
+		name = layer.name
+		print "output shape:",out_shape
+		f_ids = range(out_shape[-1])[:10]
+		for fi in f_ids:
+			im = visualization.visualize_activation(
+				self.model,
+				l_idx, fi,
+			input_range=(0.0,1.0))
+			print fi,im.shape
+			cv2.imwrite(d+"act_%s_F%d.png"%(name,fi),im*255)
+
+	def save_saliency_map(self,name):
 		d = self.__model_dir+"saliency/"
-		l_idx =5
-		f_idx = [1]
-		print "v"
-		imgs = visualization.visualize_saliency(
-			self.model,
-			l_idx, f_idx,
-			self.data.X[0])
-		check_create_dir(d)	
-		cv2.imwrite(d+"act_L%d_F%d.png"%(l_idx,f_idx[0]),imgs[0])
+		# check data format and find layer by name
+		if (type(name)==type("sds")):
+			l_idx =vutils.find_layer_idx(self.model,
+							name)
+		else:
+			l_idx = name
+
+		print "layer idx",l_idx
+		layer = self.model.layers[l_idx]
+		out_shape = layer.output_shape
+		name = layer.name
+		print "output shape:",out_shape
+		f_ids = range(out_shape[-1])[:10]
+		for fi in f_ids:
+			im = visualization.visualize_saliency(
+				self.model,
+				l_idx, fi,
+				self.data.X[0])
+			print fi,im.shape
+			cv2.imwrite(d+"sail_%s_F%d.png"%(name,fi),im*255)
 
 
 # -- Loading and saving model --

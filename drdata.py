@@ -38,6 +38,7 @@ def get_train_img():
         for ip in iplist:
             # read the file. guaranteed to exist
             img = cv2.imread(ip)
+	    img= cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             resized_image = cv2.resize(img, (299,299)) 
             X.append(resized_image)
             y.append(clid)
@@ -68,8 +69,7 @@ class DRData:
 
     def r_s_split(self,ratio=  0.2):
         X_tr,X_s,y_tr,y_s = train_test_split(self.X,self.y,
-                test_size=ratio,
-                random_state=40)
+                test_size=ratio) 
         self.trn = (X_tr, y_tr)
         self.tst = (X_s, y_s)
         return X_tr,y_tr,X_s,y_s

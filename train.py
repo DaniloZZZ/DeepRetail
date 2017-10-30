@@ -1,9 +1,7 @@
 import os
 import sys
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
 os.environ["DEVICE"]="cuda0"
 
 import numpy as np
@@ -21,12 +19,12 @@ from drmodel import DrModel
 
 def train():
     drm = DrModel()
+    drm.data.r_s_split()
+    drm.data.print_stat()
     data = drm.data
-    data.print_stat()
 
     drm.model_name = "drmodel"
-    preprocess(data)
-    model =drnet.drnet((data.ch,data.w,data.h),data.cls)
+    model =drnet.drnet((data.w,data.h,data.ch),data.cls)
     #model = inception_v4.create_inception_v4((data.ch,data.w,data.h),nb_classes = 5)
     #model = alexnet.alexNet((data.ch,data.w,data.h),5)
     print "Fitting model with this structure:"
@@ -38,10 +36,11 @@ def train():
                 metrics=['accuracy'])
 
     drm.model = model
-    drm.train_augm()
+    #drm.train_augm()
 
+    drm.train_classic(epochs=30)
     orig =  data._lb.inverse_transform(data.trn[1])
-  # model.fit(data.trn[0],data.trn[1], epochs=102)
+
     print "\nEvaluating model..."
     score = drm.model.evaluate(data.tst[0], data.tst[1], verbose=1)
     count_acc_by_hand(100,drm.model,data)
@@ -79,8 +78,6 @@ def count_acc_by_hand(cnt,model,data):
     print "Example of prediction",model.predict(np.array([data.tst[0][0]]))
     print "accuracy by hand:",sum([pr[i]==orig[i]for i in range(cnt)])/(cnt*1.0)
 
-
-
 def cls_of_pred(prediction):
     c = 0
     i = 0
@@ -94,7 +91,7 @@ def cls_of_pred(prediction):
 
 def preprocess(d):
     # transform data to have width, normalize
-    d.X = d.X.reshape(d.len, d.ch, d.h, d.w).astype('float32')
+    d.X = d.X.reshape(d.len, d.h, d.w, d.ch).astype('float32')
     d.X /= 255
 
 train()

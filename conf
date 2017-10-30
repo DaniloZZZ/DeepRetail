@@ -1,0 +1,5 @@
+#!/bin/bash
+sudo mv /usr/lib32/nvidia-384/libEGL.so.1 /usr/lib32/nvidia-384/libEGL.so.1.1
+sudo ln -s /usr/lib32/nvidia-384/libEGL.so.1.1 /usr/lib32/nvidia-384/libEGL.so.1
+sudo mv /usr/lib/nvidia-384/libEGL.so.1 /usr/lib/nvidia-384/libEGL.so.1.1
+sudo ln -s /usr/lib/nvidia-384/libEGL.so.1.1 /usr/lib/nvidia-384/libEGL.so.1
