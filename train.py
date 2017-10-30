@@ -36,9 +36,9 @@ def train():
                 metrics=['accuracy'])
 
     drm.model = model
-    #drm.train_augm()
+    drm.train_augm(epochs = 10)
 
-    drm.train_classic(epochs=30)
+  #  drm.train_classic(epochs=30,subset=100)
     orig =  data._lb.inverse_transform(data.trn[1])
 
     print "\nEvaluating model..."

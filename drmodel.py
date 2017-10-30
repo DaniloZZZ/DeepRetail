@@ -23,13 +23,13 @@ class DrModel:
 		self.__model_dir = self.__models_dir+name +"/"
 
 # -- Training --
-	def train_augm(self):
+	def train_augm(self,epochs=20):
 		self.train_datagen = ImageDataGenerator(
 				rescale = 1/255.,
-				rotation_range=40,
+				rotation_range=50,
 				width_shift_range= 0.15,
 				height_shift_range = 0.15,
-				shear_range=0.2, zoom_range=0.2,
+				shear_range=0.1, zoom_range=0.1,
 				horizontal_flip=True)
 
 		train_gen = self.train_datagen.flow_from_directory(
@@ -38,27 +38,49 @@ class DrModel:
 				target_size=self.im_size,
 				batch_size=16,
 				class_mode='categorical')
+		validation_generator= self.train_datagen.flow_from_directory(
+				"data/validation",
+			#	save_to_dir = self.__augmented_dir,
+				target_size=self.im_size,
+				batch_size=16,
+				class_mode='categorical')
 
 		self.data.r_s_split(ratio = 0.33)
+		train_gen= self.train_datagen.flow(
+				self.data.trn[0],
+				self.data.trn[1],
+				batch_size = 16)
 		validation_generator = self.train_datagen.flow(
 				self.data.tst[0],
 				self.data.tst[1],
 				batch_size = 16)
+		for x,y in train_gen:
+			plt.imshow(x[0])
+			print self.data.get_label_names(y)[0]
+			plt.show()
+			break
+		for x,y in validation_generator:
+			plt.imshow(x[0])
+			print self.data.get_label_names(y)[0]
+			plt.show()
+			break
 
 		self.model.fit_generator(
 			train_gen,
-			workers=4,
-			steps_per_epoch=100,
-			epochs=10,
+			workers=1,
+			steps_per_epoch=300,
+			epochs=epochs,
 			validation_data=validation_generator,
 			validation_steps=30)
 
-	def train_classic(self,epochs = 20):
+	def train_classic(self,epochs = 20,subset=0):
+		if subset<1: 
+			subset= len(self.data.trn[1])
 		print self.data.trn[1][1]
 		plt.imshow(self.data.trn[0][1])
 		plt.show()
-		self.model.fit(self.data.trn[0][:100],
-			self.data.trn[1][:100],
+		self.model.fit(self.data.trn[0][:subset],
+			self.data.trn[1][:subset],
 			epochs=epochs)
 
 	def predict(self,img_arr):
@@ -71,8 +93,8 @@ class DrModel:
 		print "Predicting for %d images"%len(imgs)
 		imgs = np.array(imgs)
 		s = imgs.shape
-		imgs = n.array(imgs).reshape(s[0],s[1],s[2],s[3])
-		preds = self.model.preict(np.array(imgs))
+		imgs = np.array(imgs).reshape(s[0],s[1],s[2],s[3])
+		preds = self.model.predict(np.array(imgs))
 		# get labels from prefictions
 		labels = self.data._lb.inverse_transform(preds)
 		return self.data.get_label_names(labels)

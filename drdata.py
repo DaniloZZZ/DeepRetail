@@ -74,7 +74,11 @@ class DRData:
         self.tst = (X_s, y_s)
         return X_tr,y_tr,X_s,y_s
 
+
     def get_label_names(self,lab_arr ):
+	if len(lab_arr.shape)>1:	
+		lab_arr = self._lb.inverse_transform(lab_arr)
+	print lab_arr
 	return [self.clsNames[l] for l in lab_arr]
 
 
