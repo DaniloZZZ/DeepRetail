@@ -12,8 +12,6 @@ def drnet(input_shape,nb_classes):
 	x.add(Conv2D(128,(3,3),activation='relu'))
 	x.add(Dropout(0.25))
 	x.add(Conv2D(64,(3,3),activation='relu'))
-	x.add(Conv2D(64,(3,3),activation='relu'))
-	x.add(Conv2D(64,(3,3),activation='relu'))
 	x.add(Conv2D(64,(3,3),activation='relu',name = "lconv"))
 
 	x.add(Flatten())

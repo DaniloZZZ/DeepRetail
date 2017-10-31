@@ -19,7 +19,7 @@ class DrModel:
 	im_size = (299,299)
 
 	def __init__(self, name = "drmodel"):
-		prtnt "Creating model \"%s\""%name
+		print "Creating model \"%s\" "%name
 		self.model_name = name
 
 		d = drdata.get_train_img()
@@ -28,8 +28,9 @@ class DrModel:
 
 		print "Normalizing data, each sample has L2 of one"
 		self._normer = Normalizer()
-		self._normer.fit(d.X)
-		self._normer.transform(d.X)
+		s = d.X.shape
+		self._normer.fit(d.X.reshape(s[0],s[1]*s[2]*s[3]))
+		self.data.X = self._normer.transform(d.X.reshape(s[0],s[1]*s[2]*s[3])).reshape(s)
 
 # -- Training --
 	def train_augm(self,epochs=20):
@@ -76,7 +77,7 @@ class DrModel:
 		self.model.fit_generator(
 			train_gen,
 			workers=1,
-			steps_per_epoch=2000,
+			steps_per_epoch=200,
 			epochs=epochs,
 			validation_data=validation_generator,
 			validation_steps=30)
@@ -104,12 +105,13 @@ class DrModel:
 		imgs = np.array(imgs).reshape(s[0],s[1],s[2],s[3])
 
 		# Appplying Normalizer
-		imgs = self._normer.transform(imgs)
+		imgs = self._normer.transform(imgs.reshape(s[0],s[1]*s[2]*s[3])).reshape(s)
 
 		print "Predicting for %d images"%len(imgs)
 		preds = self.model.predict(np.array(imgs))
 		# get labels from prefictions
 		labels = self.data._lb.inverse_transform(preds)
+		print "probabilitias:",self.data.get_label_probs(preds)
 		return self.data.get_label_names(labels)
 
 # -- Evaluating and visualizing model

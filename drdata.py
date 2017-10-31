@@ -74,6 +74,20 @@ class DRData:
         self.tst = (X_s, y_s)
         return X_tr,y_tr,X_s,y_s
 
+    def get_label_probs(self,y):
+	if len(y.shape)!=2:
+		raise Exception("predictions must be a 2-d array of probs")
+	else:
+		ds = []
+		for probs in y:
+			d = {}
+			j=0
+			#TODO: take first n classes with higest prob
+			for c in self.clsNames:
+				d[c] = probs[j]
+				j=j+1
+			ds.append(d)
+		return ds
 
     def get_label_names(self,lab_arr ):
 	if len(lab_arr.shape)>1:	
