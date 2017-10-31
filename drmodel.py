@@ -4,6 +4,7 @@ from keras.models import Sequential,model_from_json
 from keras.preprocessing.image import ImageDataGenerator
 import vis.visualization as visualization
 from vis.utils import utils as vutils
+from sklearn.preprocessing import Normalizer
 
 import cv2
 from PIL import Image
@@ -16,16 +17,23 @@ class DrModel:
 	__train_dir = "data/train/"
 	__augmented_dir = "data/augm"
 	im_size = (299,299)
+
 	def __init__(self, name = "drmodel"):
+		prtnt "Creating model \"%s\""%name
+		self.model_name = name
+
 		d = drdata.get_train_img()
 		self.data = d
-		self.model_name = name
 		self.__model_dir = self.__models_dir+name +"/"
+
+		print "Normalizing data, each sample has L2 of one"
+		self._normer = Normalizer()
+		self._normer.fit(d.X)
+		self._normer.transform(d.X)
 
 # -- Training --
 	def train_augm(self,epochs=20):
 		self.train_datagen = ImageDataGenerator(
-				rescale = 1/255.,
 				rotation_range=70,
 				width_shift_range= 0.15,
 				height_shift_range = 0.15,
@@ -90,10 +98,15 @@ class DrModel:
 		# convert to np array and resize
 		imgs = [cv2.resize(np.array(img),self.im_size) for img in images]
 
-		print "Predicting for %d images"%len(imgs)
+		#reshaping channels
 		imgs = np.array(imgs)
 		s = imgs.shape
 		imgs = np.array(imgs).reshape(s[0],s[1],s[2],s[3])
+
+		# Appplying Normalizer
+		imgs = self._normer.transform(imgs)
+
+		print "Predicting for %d images"%len(imgs)
 		preds = self.model.predict(np.array(imgs))
 		# get labels from prefictions
 		labels = self.data._lb.inverse_transform(preds)
