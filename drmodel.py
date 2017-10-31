@@ -2,6 +2,10 @@ import io,os
 import numpy as np
 from keras.models import Sequential,model_from_json
 from keras.preprocessing.image import ImageDataGenerator
+from keras.applications.resnet50 import ResNet50
+from keras.preprocessing import image
+from keras.applications.resnet50 import preprocess_input, decode_predictions
+
 import vis.visualization as visualization
 from vis.utils import utils as vutils
 from sklearn.preprocessing import Normalizer
@@ -27,18 +31,19 @@ class DrModel:
 		self.__model_dir = self.__models_dir+name +"/"
 
 		print "Normalizing data, each sample has L2 of one"
-		self._normer = Normalizer()
-		s = d.X.shape
-		self._normer.fit(d.X.reshape(s[0],s[1]*s[2]*s[3]))
-		self.data.X = self._normer.transform(d.X.reshape(s[0],s[1]*s[2]*s[3])).reshape(s)
+		#self._normer = Normalizer()
+		#s = d.X.shape
+		#self._normer.fit(d.X.reshape(s[0],s[1]*s[2]*s[3]))
+		#self.data.X = self._normer.transform(d.X.reshape(s[0],s[1]*s[2]*s[3])).reshape(s)
 
 # -- Training --
 	def train_augm(self,epochs=20):
 		self.train_datagen = ImageDataGenerator(
+				rescale = 1/255.,
 				rotation_range=70,
 				width_shift_range= 0.15,
 				height_shift_range = 0.15,
-				shear_range=0.2, zoom_range=0.2,
+				shear_range=0.2, zoom_range=0.1,
 				horizontal_flip=True)
 
 		train_gen = self.train_datagen.flow_from_directory(
@@ -58,11 +63,11 @@ class DrModel:
 		train_gen= self.train_datagen.flow(
 				self.data.trn[0],
 				self.data.trn[1],
-				batch_size = 16)
+				batch_size = 8)
 		validation_generator = self.train_datagen.flow(
 				self.data.tst[0],
 				self.data.tst[1],
-				batch_size = 16)
+				batch_size =8)
 		for x,y in train_gen:
 			plt.imshow(x[0])
 			print self.data.get_label_names(y)[0]
@@ -92,8 +97,25 @@ class DrModel:
 			self.data.trn[1][:subset],
 			epochs=epochs)
 
+	def predict_resnet50(self,img_arr):
+		model = ResNet50(weights='imagenet')
+		# load from binary to Image obj
+		images = [Image.open(io.BytesIO(bts)) for bts in img_arr]
+		# convert to np array and resize
+		imgs = [cv2.resize(np.array(img),(224,224)) for img in images]
+		imgs = np.array(imgs).astype('float64')
+		for x in imgs:
+			x = np.expand_dims(x, axis=0)
+			x = preprocess_input(x)
+
+			preds = model.predict(x)
+			# decode the results into a list of tuples (class, description, probability)
+			# (one such list for each sample in the batch)
+			print('Predicted:', decode_predictions(preds, top=3)[0])		
+
 	def predict(self,img_arr):
 		# takes binary data just from POST request		
+		#self.predict_resnet50(img_arr)
 		# load from binary to Image obj
 		images = [Image.open(io.BytesIO(bts)) for bts in img_arr]
 		# convert to np array and resize
@@ -102,10 +124,10 @@ class DrModel:
 		#reshaping channels
 		imgs = np.array(imgs)
 		s = imgs.shape
-		imgs = np.array(imgs).reshape(s[0],s[1],s[2],s[3])
+		imgs = np.array(imgs).reshape(s[0],s[1],s[2],s[3])/255.
 
 		# Appplying Normalizer
-		imgs = self._normer.transform(imgs.reshape(s[0],s[1]*s[2]*s[3])).reshape(s)
+		#imgs = self._normer.transform(imgs.reshape(s[0],s[1]*s[2]*s[3])).reshape(s)
 
 		print "Predicting for %d images"%len(imgs)
 		preds = self.model.predict(np.array(imgs))

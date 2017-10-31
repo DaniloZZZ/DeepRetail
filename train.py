@@ -9,6 +9,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers  import Conv2D, MaxPooling2D,AveragePooling2D
 from keras.utils import np_utils,plot_model
+from keras import optimizers
 
 import inception_v4, alexnet,drnet
 
@@ -20,7 +21,6 @@ from drmodel import DrModel
 def train():
     drm = DrModel()
     drm.data.r_s_split()
-    drm.data.print_stat()
     data = drm.data
 
     drm.model_name = "drmodel"
@@ -31,17 +31,19 @@ def train():
     model.summary()
     
     print "Compiling model..."
+    sgd  = optimizers.SGD(lr=0.02,decay = 1e-6,momentum=0.2, nesterov=True)
     model.compile(loss='categorical_crossentropy',
-                optimizer='adam',
+                optimizer=sgd,
                 metrics=['accuracy'])
 
     drm.model = model
-    drm.train_augm(epochs = 5)
+    drm.train_augm(epochs = 40)
 
   #  drm.train_classic(epochs=30,subset=100)
     orig =  data._lb.inverse_transform(data.trn[1])
 
     print "\nEvaluating model..."
+    data.scale(1/255.)
     score = drm.model.evaluate(data.tst[0], data.tst[1], verbose=1)
     count_acc_by_hand(100,drm.model,data)
     print "loss:%f , score:%f "%(score[0],score[1])

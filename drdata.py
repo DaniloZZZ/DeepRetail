@@ -67,6 +67,9 @@ class DRData:
         print "X shape:%s \ny shape:%s \nclass names: %s \n"%\
         (self.X.shape,self.y.shape,self.clsNames)
 
+    def scale(self,r):
+	self.X =np.array(self.X)*r	
+
     def r_s_split(self,ratio=  0.2):
         X_tr,X_s,y_tr,y_s = train_test_split(self.X,self.y,
                 test_size=ratio) 
