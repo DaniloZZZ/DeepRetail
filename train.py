@@ -14,6 +14,7 @@ from keras import optimizers
 import inception_v4, alexnet,drnet
 
 from keras.datasets import mnist
+import sklearn.metrics
 from matplotlib import pyplot as plt
 import drdata
 from drmodel import DrModel 
@@ -31,14 +32,16 @@ def train():
     model.summary()
     
     print "Compiling model..."
-    sgd  = optimizers.SGD(lr=0.02,decay = 1e-6,momentum=0.2, nesterov=True)
+    sgd  = optimizers.SGD(lr=0.0051,decay = 1e-6,momentum=0.4, nesterov=True)
     model.compile(loss='categorical_crossentropy',
                 optimizer=sgd,
                 metrics=['accuracy'])
 
     drm.model = model
-    drm.train_augm(epochs = 40)
+    drm.train_augm(epochs = 2)
 
+    print  "saving model..."
+    drm.save_model()
   #  drm.train_classic(epochs=30,subset=100)
     orig =  data._lb.inverse_transform(data.trn[1])
 
@@ -48,7 +51,6 @@ def train():
     count_acc_by_hand(100,drm.model,data)
     print "loss:%f , score:%f "%(score[0],score[1])
     print  "saving model..."
-    drm.save_model()
 
 def train_minibatches():
     num_batches = 20

@@ -69,6 +69,8 @@ class DRData:
 
     def scale(self,r):
 	self.X =np.array(self.X)*r	
+	self.trn =np.array(self.trn[0])*r, self.trn[1]	
+	self.tst =np.array(self.tst[0])*r, self.tst[1]
 
     def r_s_split(self,ratio=  0.2):
         X_tr,X_s,y_tr,y_s = train_test_split(self.X,self.y,

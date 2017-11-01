@@ -63,11 +63,11 @@ class DrModel:
 		train_gen= self.train_datagen.flow(
 				self.data.trn[0],
 				self.data.trn[1],
-				batch_size = 8)
+				batch_size = 16)
 		validation_generator = self.train_datagen.flow(
 				self.data.tst[0],
 				self.data.tst[1],
-				batch_size =8)
+				batch_size =16)
 		for x,y in train_gen:
 			plt.imshow(x[0])
 			print self.data.get_label_names(y)[0]
@@ -82,10 +82,10 @@ class DrModel:
 		self.model.fit_generator(
 			train_gen,
 			workers=1,
-			steps_per_epoch=200,
+			steps_per_epoch=80,
 			epochs=epochs,
 			validation_data=validation_generator,
-			validation_steps=30)
+			validation_steps=10)
 
 	def train_classic(self,epochs = 20,subset=0):
 		if subset<1: 
